@@ -44,12 +44,10 @@ deps:
 	go get -u github.com/bketelsen/crypt/bin/crypt
 	go mod tidy
 	go mod verify
-	go mod vendor
 .PHONY: deps
 
 todo:
 	@grep \
-		--exclude-dir=vendor \
 		--exclude-dir=node_modules \
 		--exclude-dir=bin \
 		--exclude=Makefile \
