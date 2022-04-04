@@ -40,7 +40,7 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
       - name: Cache Go modules
-        uses: actions/cache@v2
+        uses: actions/cache@v3.0.1
         with:
           path: |
             ~/.cache/go-build
@@ -77,7 +77,7 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
       - name: Cache Go modules
-        uses: actions/cache@v2
+        uses: actions/cache@v3.0.1
         with:
           path: |
             ~/.cache/go-build
