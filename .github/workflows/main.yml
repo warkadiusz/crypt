@@ -53,7 +53,7 @@ jobs:
       - name: Make Unit Tests
         run: make test
       - name: Upload Code Coverage
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           flags: unit-tests,${{ matrix.os }}
           token: ${{ secrets.CODECOV_TOKEN }}
