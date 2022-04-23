@@ -18,20 +18,35 @@ var (
 )
 
 var (
-	data          string
-	backendName   string
-	key           string
-	keyring       string
-	endpoint      string
-	secretKeyring string
-	plaintext     bool
-	machines      []string
+	data             string
+	backendName      string
+	key              string
+	keyring          string
+	endpoint         string
+	secretKeyring    string
+	plaintext        bool
+	machines         []string
+	encryptionEngine string
 )
 
 func init() {
 	flagset.StringVar(&backendName, "backend", "etcd", "backend provider")
 	flagset.StringVar(&endpoint, "endpoint", "", "backend url")
 	flagset.BoolVar(&plaintext, "plaintext", false, "skip encryption")
+	flagset.StringVar(
+		&encryptionEngine,
+		"encryption-engine",
+		"pgp",
+		fmt.Sprintf(`engine to be used for encryption/decryption. 
+Currently supported engines:
+  - pgp - default, uses PGP asymmetric encryption with secret/public keyrings, default for backwards-compatibility
+  - age - uses age, see more at https://github.com/FiloSottile/age
+
+Format of keyrings provided with -keyring and -secret-keyring options depends on the selected encryption engine.
+For pgp engine, PGP keyrings should be used. For age engine, file with a list of keys can be used, as described here: 
+https://github.com/FiloSottile/age/tree/v1.0.0#recipient-files
+`),
+	)
 }
 
 func main() {

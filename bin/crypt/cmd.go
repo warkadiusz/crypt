@@ -4,6 +4,8 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/bketelsen/crypt/encoding/secconf/age"
+	"github.com/bketelsen/crypt/encoding/secconf/openpgp"
 	"io/ioutil"
 	"log"
 	"os"
@@ -38,7 +40,11 @@ func getCmd(flagset *flag.FlagSet) {
 		fmt.Printf("%s\n", value)
 		return
 	}
-	value, err := getEncrypted(key, secretKeyring, backendStore)
+	encryptionEngine, err := getEncryptionEngine(encryptionEngine)
+	if err != nil {
+		log.Fatal(err)
+	}
+	value, err := getEncrypted(key, secretKeyring, backendStore, encryptionEngine)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -53,7 +59,7 @@ func versionCmd(flagset *flag.FlagSet, ver string) {
 	fmt.Println(ver)
 }
 
-func getEncrypted(key, keyring string, store backend.Store) ([]byte, error) {
+func getEncrypted(key, keyring string, store backend.Store, encryptionEngine secconf.Secconf) ([]byte, error) {
 	var value []byte
 	kr, err := os.Open(keyring)
 	if err != nil {
@@ -64,7 +70,7 @@ func getEncrypted(key, keyring string, store backend.Store) ([]byte, error) {
 	if err != nil {
 		return value, err
 	}
-	value, err = secconf.Decode(data, kr)
+	value, err = encryptionEngine.Decode(data, kr)
 	if err != nil {
 		return value, err
 	}
@@ -106,7 +112,13 @@ func listCmd(flagset *flag.FlagSet) {
 		}
 		return
 	}
-	list, err := listEncrypted(key, secretKeyring, backendStore)
+
+	encryptionEngine, err := getEncryptionEngine(encryptionEngine)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	list, err := listEncrypted(key, secretKeyring, backendStore, encryptionEngine)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -115,7 +127,7 @@ func listCmd(flagset *flag.FlagSet) {
 	}
 }
 
-func listEncrypted(key, keyring string, store backend.Store) (backend.KVPairs, error) {
+func listEncrypted(key, keyring string, store backend.Store, encryptionEngine secconf.Secconf) (backend.KVPairs, error) {
 	kr, err := os.Open(keyring)
 	if err != nil {
 		return nil, err
@@ -127,7 +139,7 @@ func listEncrypted(key, keyring string, store backend.Store) (backend.KVPairs, e
 		return nil, err
 	}
 	for i, kv := range data {
-		data[i].Value, err = secconf.Decode(kv.Value, kr)
+		data[i].Value, err = encryptionEngine.Decode(kv.Value, kr)
 		kr.Seek(0, 0)
 		if err != nil {
 			return nil, err
@@ -178,7 +190,11 @@ func setCmd(flagset *flag.FlagSet) {
 		}
 		return
 	}
-	err = setEncrypted(key, keyring, d, backendStore)
+	encryptionEngine, err := getEncryptionEngine(encryptionEngine)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = setEncrypted(key, keyring, d, backendStore, encryptionEngine)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -190,13 +206,13 @@ func setPlain(key string, store backend.Store, d []byte) error {
 	return err
 }
 
-func setEncrypted(key, keyring string, d []byte, store backend.Store) error {
+func setEncrypted(key, keyring string, d []byte, store backend.Store, encryptionEngine secconf.Secconf) error {
 	kr, err := os.Open(keyring)
 	if err != nil {
 		return err
 	}
 	defer kr.Close()
-	secureValue, err := secconf.Encode(d, kr)
+	secureValue, err := encryptionEngine.Encode(d, kr)
 	if err != nil {
 		return err
 	}
@@ -222,4 +238,15 @@ func getBackendStore(provider string, endpoint string) (backend.Store, error) {
 	default:
 		return nil, errors.New("invalid backend " + provider)
 	}
+}
+
+func getEncryptionEngine(name string) (secconf.Secconf, error) {
+	switch name {
+	case "pgp":
+		return openpgp.Engine{}, nil
+	case "age":
+		return age.Engine{}, nil
+	}
+
+	return nil, errors.New("invalid encryption engine " + name)
 }
