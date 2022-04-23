@@ -1,6 +1,17 @@
 # crypt
 
-**This is a maintained fork of the abandoned [original](https://github.com/xordataexchange/crypt)**
+**This fork implements experimental support for [age](https://github.com/FiloSottile/age) as an alternative encryption mechanism.**
+
+PGP is still supported. Encryption engine can be selected with `-encryption-engine` flag, with possible values of `pgp` 
+and `age`. Note that `-keyring` and `-secret-keyring` file format must correspond to the selected encryption engine (PGP
+keyrings for PGP, [recipient files](https://github.com/FiloSottile/age#recipient-files) for age.).
+
+The reason behind that implementation was cumbersome handling of PGP keyrings with `gpg`, 
+[lack of maintainers/deprecation of golang.org/x/crypto/openpgp](https://github.com/golang/go/issues/44226)
+and general [problems with PGP](https://latacora.micro.blog/2019/07/16/the-pgp-problem.html). 
+Notably, some standalone tools exist for the purpose of PGP keys management, like [gpg-tui](https://github.com/orhun/gpg-tui).
+
+For more information about `age`, keys management etc., check https://github.com/FiloSottile/age.
 
 You can use crypt as a command line tool or as a configuration library:
 
